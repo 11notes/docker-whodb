@@ -21,8 +21,7 @@
     git checkout ${BUILD_VERSION}; \
     cd ${BUILD_DIR}/frontend; \
     pnpm install; \
-    pnpm run build; \
-    mv build lib;
+    pnpm run build;
 
   FROM golang:1.22-alpine3.20 as backend
   ENV BUILD_VERSION=main
@@ -39,13 +38,17 @@
     cd ${BUILD_DIR}; \
     git checkout ${BUILD_VERSION}; \
     cd ${BUILD_DIR}/core; \
-    go mod download; \
-    CGO_ENABLED=1 GOOS=linux go build -o /usr/local/bin/whodb    
+    go mod download;
+
+  COPY --from=frontend /whodb/frontend/build ${BUILD_DIR}/core/build
+
+  RUN set -ex; \
+    cd ${BUILD_DIR}/core; \
+    CGO_ENABLED=1 GOOS=linux go build -o /usr/local/bin/whodb;  
 
 # :: Header
   FROM 11notes/alpine:stable
   COPY --from=util /util/linux/shell/elevenLogJSON /usr/local/bin
-  COPY --from=frontend /whodb/frontend/lib /whodb/lib
   COPY --from=backend /usr/local/bin/whodb /usr/local/bin
   ENV APP_NAME="whodb"
   ENV APP_ROOT=/whodb
@@ -56,7 +59,6 @@
   # :: prepare image
     RUN set -ex; \
       mkdir -p ${APP_ROOT}/var; \
-      ln -s ${APP_ROOT}/lib /usr/local/bin/build; \
       ln -s ${APP_ROOT}/var /db; \
       apk --no-cache upgrade;
 
