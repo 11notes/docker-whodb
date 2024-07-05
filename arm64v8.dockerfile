@@ -10,7 +10,8 @@
     git clone https://github.com/11notes/util.git;
 
 # :: Build
-  FROM 11notes/node:stable as frontend
+  FROM 11notes/node:arm64v8-stable as frontend
+  COPY --from=qemu /usr/bin/qemu-aarch64-static /usr/bin
   ENV BUILD_VERSION=main
   ENV BUILD_DIR=/whodb
 
