@@ -24,7 +24,7 @@
     pnpm run build; \
     mv build lib;
 
-  FROM golang:1.22.1-alpine3.19 as backend
+  FROM golang:1.22-alpine3.20 as backend
   ENV BUILD_VERSION=main
   ENV BUILD_DIR=/go/whodb
 
@@ -40,7 +40,6 @@
     git checkout ${BUILD_VERSION}; \
     cd ${BUILD_DIR}/core; \
     go mod download; \
-    cat ${BUILD_DIR}/core/src/router/file_server.go; \
     CGO_ENABLED=1 GOOS=linux go build -o /usr/local/bin/whodb    
 
 # :: Header
