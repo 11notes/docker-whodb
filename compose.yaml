@@ -5,12 +5,24 @@ services:
     container_name: "postgres"
     environment:
       TZ: Europe/Zurich
-      POSTGRES_PASSWORD: *********
+      POSTGRES_PASSWORD: "whodb"
     volumes:
       - "postgres-var:/postgres/var"
       - "postgres-backup:/postgres/backup"
     networks:
       - postgres
+    restart: always
+  redis:
+    image: "11notes/redis:7.2.5"
+    container_name: "redis"
+    environment:
+      TZ: Europe/Zurich
+      REDIS_PASSWORD: "whodb"
+    volumes:
+      - "redis-etc:/redis/etc"
+      - "redis-var:/redis/var"
+    networks:
+      - redis
     restart: always
   whodb:
     image: "11notes/whodb:latest"
@@ -21,12 +33,17 @@ services:
       - "8080:8080/tcp"
     networks:
       - postgres
+      - redis
       - frontend
     restart: always
 volumes:
   postgres-var:
   postgres-backup:
+  redis-etc:
+  redis-var:
 networks:
   postgres:
+    internal: true
+  redis:
     internal: true
   frontend:

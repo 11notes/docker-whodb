@@ -10,8 +10,7 @@
     git clone https://github.com/11notes/util.git;
 
 # :: Build
-  FROM 11notes/node:arm64v8-stable as frontend
-  COPY --from=qemu /usr/bin/qemu-aarch64-static /usr/bin
+  FROM 11notes/node:stable as frontend
   ENV BUILD_VERSION=main
   ENV BUILD_DIR=/whodb
 
@@ -27,7 +26,7 @@
     pnpm install; \
     pnpm run build;
 
-  FROM arm64v8/golang:1.22-alpine3.20 as backend
+  FROM --platform=linux/arm64 arm64v8/golang:1.22-alpine3.20 as backend
   COPY --from=qemu /usr/bin/qemu-aarch64-static /usr/bin
   ENV BUILD_VERSION=main
   ENV BUILD_DIR=/go/whodb
@@ -52,7 +51,7 @@
     CGO_ENABLED=1 GOOS=linux go build -o /usr/local/bin/whodb;
 
 # :: Header
-  FROM 11notes/alpine:arm64v8-stable
+  FROM --platform=linux/arm64 11notes/alpine:arm64v8-stable
   COPY --from=qemu /usr/bin/qemu-aarch64-static /usr/bin
   COPY --from=util /util/linux/shell/elevenLogJSON /usr/local/bin
   COPY --from=backend /usr/local/bin/whodb /usr/local/bin
