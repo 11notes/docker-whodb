@@ -22,6 +22,7 @@ WhoDB is a lightweight (<50MB), powerful, and user-friendly database management 
 >* ... this image has no shell since it is [distroless](https://github.com/11notes/RTFM/blob/main/linux/container/image/distroless.md)
 >* ... this image is auto updated to the latest version via CI/CD
 >* ... this image has a health check
+>* ... this image has disabled the default telemetry
 >* ... this image runs read-only
 >* ... this image is automatically scanned for CVEs before and after publishing
 >* ... this image is created via a secure and pinned CI/CD process
@@ -150,4 +151,4 @@ docker pull quay.io/11notes/whodb:0.60.0
 # ElevenNotes™️
 This image is provided to you at your own risk. Always make backups before updating an image to a different version. Check the [releases](https://github.com/11notes/docker-whodb/releases) for breaking changes. If you have any problems with using this image simply raise an [issue](https://github.com/11notes/docker-whodb/issues), thanks. If you have a question or inputs please create a new [discussion](https://github.com/11notes/docker-whodb/discussions) instead of an issue. You can find all my other repositories on [github](https://github.com/11notes?tab=repositories).
 
-*created 08.09.2025, 23:50:56 (CET)*
+*created 09.09.2025, 00:20:48 (CET)*
