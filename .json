@@ -1,0 +1,24 @@
+{
+  "image": "11notes/whodb",
+  "name": "whodb",
+  "root": "/whodb",
+  "semver": {
+    "version": "0.60.0"
+  },
+  "readme": {
+    "description": "Run whodb rootless and distroless.",
+    "introduction": "WhoDB is a lightweight (<50MB), powerful, and user-friendly database management tool designed to streamline your database administration tasks. Combining the simplicity of Adminer with enhanced UX and performance, WhoDB is built with GoLang to deliver optimal speed and efficiency. With features like interactive schema visualization and inline editing, WhoDB caters to both small projects and complex enterprise systems.",
+    "built": {
+      "whodb": "https://github.com/clidey/whodb"
+    },
+    "distroless": {
+      "layers": [
+        "11notes/distroless",
+        "11notes/distroless:localhealth"
+      ]
+    },
+    "comparison": {
+      "image": "clidey/whodb"
+    }
+  }
+}
