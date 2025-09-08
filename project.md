@@ -1,3 +1,5 @@
+${{ image: Interface.png }}
+
 ${{ content_synopsis }} This image will run whodb [rootless]() and [distroless](). Attach it to your Postgres, your MariaDB, your Redis or your SQLite database and enjoy a simple UI to browse your data quickly and easily. Perfect for quick developments and lookups.
 
 ${{ content_uvp }} Good question! Because ...
