@@ -52,7 +52,9 @@
   ARG APP_ROOT
 
   RUN set -ex; \
-    mkdir -p /distroless${APP_ROOT}/var;
+    mkdir -p /distroless${APP_ROOT}/var; \
+    mkdir -p {APP_ROOT}/var; \
+    ln -s ${APP_ROOT}/var /distroless/db;
 
 
 # ╔═════════════════════════════════════════════════════╗
