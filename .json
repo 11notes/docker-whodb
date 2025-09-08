@@ -1,6 +1,7 @@
 {
   "image": "11notes/whodb",
   "name": "whodb",
+  "platform":"amd64,arm64",
   "root": "/whodb",
   "semver": {
     "version": "0.60.0"
