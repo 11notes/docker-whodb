@@ -16,6 +16,8 @@ ${{ github:> }}* ... this image is very small
 
 If you value security, simplicity and optimizations to the extreme, then this image might be for you.
 
+${{ content_comparison }}
+
 ${{ title_volumes }}
 * **${{ json_root }}/var** - Directory of databases to import (like SQlite)
 
