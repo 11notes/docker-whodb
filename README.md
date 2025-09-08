@@ -9,6 +9,8 @@ Run whodb rootless and distroless.
 
 WhoDB is a lightweight (<50MB), powerful, and user-friendly database management tool designed to streamline your database administration tasks. Combining the simplicity of Adminer with enhanced UX and performance, WhoDB is built with GoLang to deliver optimal speed and efficiency. With features like interactive schema visualization and inline editing, WhoDB caters to both small projects and complex enterprise systems.
 
+![INTERFACE](https://github.com/11notes/docker-whodb/blob/master/img/Interface.png?raw=true)
+
 # SYNOPSIS 📖
 **What can I do with this?** This image will run whodb [rootless]() and [distroless](). Attach it to your Postgres, your MariaDB, your Redis or your SQLite database and enjoy a simple UI to browse your data quickly and easily. Perfect for quick developments and lookups.
 
@@ -53,13 +55,39 @@ services:
       - "3000:8080/tcp"
     networks:
       frontend:
+      backend:
+    restart: "always"
+
+  postgres:
+    image: "11notes/postgres:16"
+    <<: *lockdown
+    environment:
+      TZ: "Europe/Zurich"
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      # make a full and compressed database backup each day at 03:00
+      POSTGRES_BACKUP_SCHEDULE: "0 3 * * *"
+    networks:
+      backend:
+    volumes:
+      - "postgres.etc:/postgres/etc"
+      - "postgres.var:/postgres/var"
+      - "postgres.backup:/postgres/backup"
+    tmpfs:
+      # needed for read-only
+      - "/postgres/run:uid=1000,gid=1000"
+      - "/postgres/log:uid=1000,gid=1000"
     restart: "always"
 
 volumes:
   whodb.var:
+  postgres.etc:
+  postgres.var:
+  postgres.backup:
 
 networks:
   frontend:
+  backend:
+    internal: true
 ```
 
 # DEFAULT SETTINGS 🗃️
@@ -114,4 +142,4 @@ docker pull quay.io/11notes/whodb:0.60.0
 # ElevenNotes™️
 This image is provided to you at your own risk. Always make backups before updating an image to a different version. Check the [releases](https://github.com/11notes/docker-whodb/releases) for breaking changes. If you have any problems with using this image simply raise an [issue](https://github.com/11notes/docker-whodb/issues), thanks. If you have a question or inputs please create a new [discussion](https://github.com/11notes/docker-whodb/discussions) instead of an issue. You can find all my other repositories on [github](https://github.com/11notes?tab=repositories).
 
-*created 08.09.2025, 23:16:37 (CET)*
+*created 08.09.2025, 23:24:41 (CET)*
