@@ -36,6 +36,9 @@
 
   RUN set -ex; \
     cd ${BUILD_ROOT}/frontend; \
+    # disable telemetry
+    sed -i 's/phc_hbXcCoPTdxm5ADL8PmLSYTIUvS6oRWFM2JAK8SMbfnH/***********************************************/' ${BUILD_ROOT}/frontend/src/config/posthog.tsx; \
+    sed -i "s/import.meta.env.VITE_BUILD_EDITION === 'ee'/true/" ${BUILD_ROOT}/frontend/src/config/posthog.tsx; \
     pnpm install; \
     pnpm run build; \
     mv ${BUILD_ROOT}/frontend/build ${BUILD_ROOT}/core;
@@ -81,6 +84,9 @@
         APP_NAME=${APP_NAME} \
         APP_VERSION=${APP_VERSION} \
         APP_ROOT=${APP_ROOT}
+
+  # :: app specific environment
+    ENV NODE_ENV=production
 
   # :: multi-stage
     COPY --from=distroless / /
