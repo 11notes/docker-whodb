@@ -82,7 +82,7 @@ jobs:
             }
 
             const platforms = (
-              ("${{ github.event.inputs.platform }}".length > 0) ? "${{ github.event.inputs.platform }}".split(",") : opt.dot.platform.split(",")
+              (opt.dot?.platform) ? opt.dot.platform.split(",") : "${{ github.event.inputs.platform }}".split(",")
             );
 
             const matrix = {include:[]};
@@ -98,7 +98,7 @@ jobs:
             core.setOutput('stringify', stringify);
 
             // print
-              core.info(inspect({opt:opt, matrix:matrix}, {showHidden:false, depth:null, colors:true}));
+              core.info(inspect({opt:opt, matrix:matrix, platforms:platforms}, {showHidden:false, depth:null, colors:true}));
 
 
   # ╔═════════════════════════════════════════════════════╗
@@ -117,6 +117,7 @@ jobs:
     outputs:
       DOCKER_IMAGE_NAME: ${{ steps.setup-environment.outputs.DOCKER_IMAGE_NAME }}
       DOCKER_IMAGE_MERGE_TAGS: ${{ steps.setup-environment.outputs.DOCKER_IMAGE_MERGE_TAGS }}
+      DOCKER_IMAGE_DESCRIPTION: ${{ steps.setup-environment.outputs.DOCKER_IMAGE_DESCRIPTION }}
       WORKFLOW_BUILD: ${{ steps.setup-environment.outputs.WORKFLOW_BUILD }}
 
     timeout-minutes: 1440
@@ -279,6 +280,7 @@ jobs:
               core.exportVariable('DOCKER_IMAGE_MERGE_TAGS', docker.merge_tags.join("\r\n"));
               core.setOutput('DOCKER_IMAGE_MERGE_TAGS', docker.merge_tags.join("\r\n"));
               core.exportVariable('DOCKER_IMAGE_DESCRIPTION', docker.image.description);
+              core.setOutput('DOCKER_IMAGE_DESCRIPTION', docker.image.description);
               core.exportVariable('DOCKER_IMAGE_ARGUMENTS', arguments.join("\r\n"));
               core.exportVariable('DOCKER_IMAGE_DOCKERFILE', opt.input?.etc?.dockerfile || 'arch.dockerfile');
               core.exportVariable('DOCKER_IMAGE_PLATFORM_SANITIZED', docker.image.platform.sanitized);
@@ -456,61 +458,6 @@ jobs:
 
 
       # ╔═════════════════════════════════════════════════════╗
-      # ║                  CREATE README.md                   ║
-      # ╚═════════════════════════════════════════════════════╝
-      # CHECKOUT HEAD TO BE UP TO DATE WITH EVERYTHING
-      - name: README.md / checkout
-        if: env.WORKFLOW_CREATE_README == 'true' && matrix.platform == 'amd64'
-        continue-on-error: true
-        run: |
-          git checkout HEAD
-
-      # CREATE MAKRDOWN OF README.md
-      - name: README.md / create
-        id: github-readme
-        continue-on-error: true
-        if: env.WORKFLOW_CREATE_README == 'true' && matrix.platform == 'amd64'
-        uses: 11notes/action-docker-readme@v1
-        with:
-          sarif_file: ${{ steps.grype.outputs.sarif }}
-          build_output_metadata: ${{ steps.image-build.outputs.metadata }}
-
-      # UPLOAD README.md to DOCKER HUB
-      - name: README.md / push to Docker Hub
-        continue-on-error: true
-        if: env.WORKFLOW_CREATE_README == 'true' && matrix.platform == 'amd64' && steps.github-readme.outcome == 'success' && hashFiles('README_NONGITHUB.md') != ''
-        uses: christian-korneck/update-container-description-action@d36005551adeaba9698d8d67a296bd16fa91f8e8 # v1
-        env:
-          DOCKER_USER: 11notes
-          DOCKER_PASS: ${{ secrets.DOCKER_TOKEN }}
-        with:
-          destination_container_repo: ${{ env.DOCKER_IMAGE_NAME }}
-          provider: dockerhub
-          short_description: ${{ env.DOCKER_IMAGE_DESCRIPTION }}
-          readme_file: 'README_NONGITHUB.md'
-
-      # COMMIT NEW README.md, LICENSE and compose
-      - name: README.md / github commit & push
-        continue-on-error: true
-        if: env.WORKFLOW_CREATE_README == 'true' && matrix.platform == 'amd64' && steps.github-readme.outcome == 'success' && hashFiles('README.md') != ''
-        run: |         
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add README.md
-          if [ -f compose.yaml ]; then
-            git add compose.yaml
-          fi
-          if [ -f compose.yml ]; then
-            git add compose.yml
-          fi
-          if [ -f LICENSE ]; then
-            git add LICENSE
-          fi
-          git commit -m "update README.md"
-          git push origin HEAD:master
-
-
-      # ╔═════════════════════════════════════════════════════╗
       # ║         GITHUB REPOSITORY DEFAULT SETTINGS          ║
       # ╚═════════════════════════════════════════════════════╝
       # UPDATE REPO WITH DEFAULT SETTINGS FOR CONTAINER IMAGE
@@ -531,7 +478,6 @@ jobs:
             }' \
             --fail
 
-  
   # ╔═════════════════════════════════════════════════════╗
   # ║                                                     ║
   # ║                                                     ║
@@ -548,7 +494,7 @@ jobs:
       fail-fast: false
       matrix:
         registry: [docker.io, ghcr.io, quay.io]
-    
+
     env:
       DOCKER_IMAGE_NAME: ${{ needs.docker.outputs.DOCKER_IMAGE_NAME }}
       DOCKER_IMAGE_MERGE_TAGS: ${{ needs.docker.outputs.DOCKER_IMAGE_MERGE_TAGS }}
@@ -622,3 +568,83 @@ jobs:
       - name: platform merge / inspect
         run: |
           docker buildx imagetools inspect ${{ matrix.registry }}/${{ env.DOCKER_IMAGE_NAME }}:${{ steps.meta.outputs.version }}
+
+
+  # ╔═════════════════════════════════════════════════════╗
+  # ║                                                     ║
+  # ║                                                     ║
+  # ║               FINALIZE IMAGE CREATION               ║
+  # ║                                                     ║
+  # ║                                                     ║
+  # ╚═════════════════════════════════════════════════════╝
+  finally:
+    needs: docker
+    name: finalize image creation
+    runs-on: ubuntu-latest
+
+    env:
+      DOCKER_IMAGE_NAME: ${{ needs.docker.outputs.DOCKER_IMAGE_NAME }}
+      DOCKER_IMAGE_DESCRIPTION: ${{ needs.docker.outputs.DOCKER_IMAGE_DESCRIPTION }}
+
+    permissions:
+      contents: write
+
+    steps:
+      # ╔═════════════════════════════════════════════════════╗
+      # ║             CONTAINER REGISTRY LOGIN                ║
+      # ╚═════════════════════════════════════════════════════╝
+      # DOCKER HUB
+      - name: docker / login to hub
+        uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # v3.5.0
+        with:
+          username: 11notes
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+      # ╔═════════════════════════════════════════════════════╗
+      # ║                  CREATE README.md                   ║
+      # ╚═════════════════════════════════════════════════════╝
+      # CHECKOUT HEAD TO BE UP TO DATE WITH EVERYTHING
+      - name: README.md / checkout
+        continue-on-error: true
+        run: |
+          git checkout HEAD
+
+      # CREATE MAKRDOWN OF README.md
+      - name: README.md / create
+        id: github-readme
+        continue-on-error: true
+        uses: 11notes/action-docker-readme@v1
+
+      # UPLOAD README.md to DOCKER HUB
+      - name: README.md / push to Docker Hub
+        continue-on-error: true
+        if: steps.github-readme.outcome == 'success' && hashFiles('README_NONGITHUB.md') != ''
+        uses: christian-korneck/update-container-description-action@d36005551adeaba9698d8d67a296bd16fa91f8e8 # v1
+        env:
+          DOCKER_USER: 11notes
+          DOCKER_PASS: ${{ secrets.DOCKER_TOKEN }}
+        with:
+          destination_container_repo: ${{ env.DOCKER_IMAGE_NAME }}
+          provider: dockerhub
+          short_description: ${{ env.DOCKER_IMAGE_DESCRIPTION }}
+          readme_file: 'README_NONGITHUB.md'
+
+      # COMMIT NEW README.md, LICENSE and compose
+      - name: README.md / github commit & push
+        continue-on-error: true
+        if: steps.github-readme.outcome == 'success' && hashFiles('README.md') != ''
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          if [ -f compose.yaml ]; then
+            git add compose.yaml
+          fi
+          if [ -f compose.yml ]; then
+            git add compose.yml
+          fi
+          if [ -f LICENSE ]; then
+            git add LICENSE
+          fi
+          git commit -m "update README.md"
+          git push origin HEAD:master
