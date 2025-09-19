@@ -1,10 +1,10 @@
 {
   "image": "11notes/whodb",
   "name": "whodb",
-  "platform":"amd64,arm64",
+  "platform": "amd64,arm64",
   "root": "/whodb",
   "semver": {
-    "version": "0.60.0"
+    "version": "0.61.0"
   },
   "readme": {
     "description": "Run whodb rootless and distroless.",
