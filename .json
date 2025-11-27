@@ -4,7 +4,7 @@
   "platform": "amd64,arm64",
   "root": "/whodb",
   "semver": {
-    "version": "0.75.0"
+    "version": "0.77.0"
   },
   "readme": {
     "description": "Run whodb rootless and distroless.",
