@@ -9,7 +9,7 @@ x-lockdown: &lockdown
 
 services:
   whodb:
-    image: "11notes/whodb:0.93.0"
+    image: "11notes/whodb:0.94.0"
     <<: *lockdown
     environment:
       TZ: "Europe/Zurich"
